@@ -1,0 +1,16 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AttTest", "AttTest\AttTest.csproj", "{106A351B-CB0A-46B8-BCA5-B2A2092CA84C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{106A351B-CB0A-46B8-BCA5-B2A2092CA84C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{106A351B-CB0A-46B8-BCA5-B2A2092CA84C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{106A351B-CB0A-46B8-BCA5-B2A2092CA84C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{106A351B-CB0A-46B8-BCA5-B2A2092CA84C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

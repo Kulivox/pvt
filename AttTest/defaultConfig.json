@@ -1,0 +1,7 @@
+﻿{
+  "RoundLengthMinSeconds": 2,
+  "RoundLengthMaxSeconds": 5,
+  "FocusPointVisibilityLength": 355,
+  "TestLengthSeconds": 20,
+  "IntroLengthSeconds": 2
+}
