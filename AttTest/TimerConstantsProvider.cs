@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Text.Json;
 
@@ -11,7 +13,23 @@ namespace AttTest
             var conf = File.ReadAllText(path);
             try
             {
-                return JsonSerializer.Deserialize<TimerConstants>(conf);
+                var result = JsonSerializer.Deserialize<TimerConstants>(conf);
+
+                if (result is null)
+                {
+                    return result;
+                }
+                
+                var validationCtx = new ValidationContext(result);
+
+                var valResults = new List<ValidationResult>();
+
+                if (Validator.TryValidateObject(result, validationCtx, valResults))
+                {
+                    return result;
+                }
+
+                return null;
             }
             catch (JsonException e)
             {
