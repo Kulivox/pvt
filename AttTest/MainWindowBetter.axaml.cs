@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 using AttTest.AppStates;
 using AttTest.AppStates.RelatedInterfaces;
 using Avalonia.Controls;
@@ -18,7 +20,6 @@ namespace AttTest
 {
     public partial class MainWindowBetter : Window, IAttTestWindow
     {
-        private readonly DispatcherTimer _eventLoopTimer;
 
         private BaseAppState? _appState;
         
@@ -30,13 +31,18 @@ namespace AttTest
         
         private string? _pathToConstants;
 
-        private List<(int, string)>? _results;
+        private List<(int, string, string)>? _results;
+
+        private List<(string, string, string)> _focusPointsAndPresses;
+        
+        private string _fname = String.Empty;
+
+        private DateTime? StartOfTest { get; set; }
 
         private DateTime? _endOfTest;
 
         public MainWindowBetter()
         {
-            _eventLoopTimer = new DispatcherTimer() {Interval = TimeSpan.FromMilliseconds(1)};
             InitializeComponent();
         }
         
@@ -50,7 +56,22 @@ namespace AttTest
             _appState = newState;
         }
 
-        private void Tick(object? sender, EventArgs args)
+        private void EventLoop()
+        {
+            StartOfTest = DateTime.Now;
+            _endOfTest = DateTime.Now.AddSeconds(_constants.TestLengthSeconds);
+
+            Task.Factory.StartNew(() =>
+            {
+                while (!_gameEnded)
+                {
+                    Tick();
+                }
+            });
+
+        }
+        
+        private void Tick()
         {
             lock (_lock)
             {
@@ -64,105 +85,119 @@ namespace AttTest
                 if (now > _endOfTest)
                 {
                     _gameEnded = true;
-                    var tb = this.FindControl<TextBlock>("RoundResult");
-                    tb.Text = "End";
-                    try
-                    {
-                        EndTest();
-
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(e);
-                        throw;
-                    }
+                    EndTest();
+                    
                     return;
                 }
             
-                _appState?.HandleTimerTick();
+                _appState?.HandleTimerTick(now);
             }
             
         }
 
         private void KeyPress(object? sender, KeyEventArgs args)
         {
-            _appState?.HandleKeyPress();
+            lock (_lock)
+            {
+                _appState?.HandleKeyPress(DateTime.Now);
+            }   
         }
         
-        private void OnClicked(object? sender, PointerPressedEventArgs e)
-        {
-            _appState?.HandleKeyPress();
-        }
         
 
         public void HideFocusPoint()
         {
-            this.FindControl<Ellipse>("FocusPoint").IsVisible = false;
+            Dispatcher.UIThread.Post(() => this.FindControl<Ellipse>("FocusPoint").IsVisible = false);
         }
 
         public void ShowFocusPoint()
         {
-            this.FindControl<Ellipse>("FocusPoint").IsVisible = true;
-        }
-
-        private void DisplayAndSaveResult(string result, bool success)
-        {
-            var tb = this.FindControl<TextBlock>("RoundResult");
-            _results?.Add((_appState.RoundId, result));
-
-            var color = Colors.Green;
-            if (!success)
-            {
-                color = Colors.Red;
-            }
-            else
-            {
-                result += " ms";
-            }
+            Dispatcher.UIThread.Post(() => this.FindControl<Ellipse>("FocusPoint").IsVisible = true);
             
-            tb.Text = result;
-            tb.Foreground = new SolidColorBrush(color);
-            tb.IsVisible = true;
         }
 
-        public void ShowFailure(string failureText)
+        private void DisplayAndSaveResult(string result, string note, bool success)
         {
-            DisplayAndSaveResult(failureText, false);
+            _results?.Add((_appState.RoundId, result, note));
+            
+            Dispatcher.UIThread.Post(() =>
+            {
+                var tb = this.FindControl<TextBlock>("RoundResult");
+
+                var color = Colors.Green;
+                if (!success)
+                {
+                    color = Colors.Red;
+                    tb.Text = note;
+
+                }
+                else
+                {
+                    result += " ms";
+                    tb.Text = result;
+
+                }
+            
+                tb.Foreground = new SolidColorBrush(color);
+                tb.IsVisible = true;
+            });
+            
         }
 
-        public void ShowSuccess(string success)
+        public void ShowFailure(string failureText, string note)
         {
-            DisplayAndSaveResult(success, true);
+            DisplayAndSaveResult(failureText, note, false);
+        }
+
+        public void ShowSuccess(string success, string note)
+        {
+            DisplayAndSaveResult(success, note, true);
+        }
+
+        public void SaveKeyPressTime(DateTime focus, DateTime keyPress, string type)
+        {
+            var relFocus = focus - StartOfTest;
+            var relKeyPress = keyPress - StartOfTest;
+            
+            _focusPointsAndPresses.Add((relFocus.Value.TotalMilliseconds.ToString(CultureInfo.InvariantCulture), relKeyPress.Value.TotalMilliseconds.ToString(CultureInfo.InvariantCulture), type));
         }
 
         public void HideResult()
         {
-            this.FindControl<TextBlock>("RoundResult").IsVisible = false;
+            Dispatcher.UIThread.Post(() => this.FindControl<TextBlock>("RoundResult").IsVisible = false);
+            
         }
 
         public void EndTest()
         {
             
-            _eventLoopTimer.Stop();
-
             _appState = null;
             this.KeyDown -= KeyPress;
-            ShowRoundResults();
-            this.FindControl<Grid>("TestGrid").IsVisible = false;
-            this.FindControl<Grid>("ResultScreen").IsVisible = true;
-
-
-            var fName = this.FindControl<TextBox>("NameInput").Text.Trim() + "_"
-                                                                           + DateTime.Now.ToString("yyyy-MM-dd") + ".csv";
-
-            var sb = new StringBuilder("roundId,result\n");
-            foreach (var (r, res) in _results)
+            
+            Dispatcher.UIThread.Post(() =>
             {
-                sb.Append($"{r},{res}\n");
+                ShowRoundResults();
+                this.FindControl<Grid>("TestGrid").IsVisible = false;
+                this.FindControl<Grid>("ResultScreen").IsVisible = true;
+            });
+            
+            
+            var sb = new StringBuilder("roundId;result;addInfo\n");
+            foreach (var (r, res, note) in _results)
+            {
+                sb.Append($"{r};{res};{note}\n");
             }
 
-            File.WriteAllText(fName, sb.ToString());
+            File.WriteAllText(_fname, sb.ToString());
 
+            sb.Clear();
+
+            sb.Append("stimulus;keyPress;type\n");
+            foreach (var (st, kp, type) in _focusPointsAndPresses)
+            {
+                sb.Append($"{st};{kp};{type}\n");
+            }
+            File.WriteAllText("time_table_" +  _fname, sb.ToString());
             
         }
 
@@ -176,9 +211,9 @@ namespace AttTest
             var earlyStarts = 0;
             var averageResponseTime = 0;
 
-            foreach (var (roundNum, roundResult) in _results)
+            foreach (var (roundNum, roundResult, note) in _results)
             {
-                if (int.TryParse(roundResult, out var result))
+                if (int.TryParse(roundResult, out var result) && note == "")
                 {
                     dataX.Add(roundNum);
                     dataY.Add(result);
@@ -187,7 +222,7 @@ namespace AttTest
                 }
                 else
                 {
-                    if (roundResult == "Too fast")
+                    if (note == "Too fast")
                     {
                         earlyStarts += 1;
                     }

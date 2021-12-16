@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using AttTest.AppStates.RelatedInterfaces;
+using Avalonia.Threading;
 
 namespace AttTest.AppStates
 {
@@ -12,24 +13,23 @@ namespace AttTest.AppStates
         
         public int RoundId { get; set; }
 
-        public void HandleKeyPress()
+        public void HandleKeyPress(DateTime now)
         {
-           HandleOutsideInput(KeyPressInvokedTransitions);
+           HandleOutsideInput(KeyPressInvokedTransitions, now);
         }
         
-        public void HandleTimerTick()
+        public void HandleTimerTick(DateTime now)
         {
-            HandleOutsideInput(TimedTransitions);
+            HandleOutsideInput(TimedTransitions, now);
         }
+        
 
-        private void HandleOutsideInput((DateTime, Action<DateTime>)[] transitions) 
+        private void HandleOutsideInput((DateTime, Action<DateTime>)[] transitions, DateTime currentTime) 
         {
             if (transitions.Length == 0)
             {
                 return;
             }
-            
-            var currentTime = DateTime.Now;
 
             for (var i = 0; i < transitions.Length; i++)
             {

@@ -6,10 +6,14 @@ namespace AttTest.AppStates
 {
     public class FocusVisible : BaseAppState
     {
+        // time of construction of this state
         private readonly DateTime _focusStart;
-        public FocusVisible([NotNull] IAttTestWindow attTestWindow, [NotNull] TimerConstants constants, int roundId) : base(attTestWindow, constants, roundId)
+        // real time when focus should become visible
+        private readonly DateTime _focusVisible;
+        public FocusVisible([NotNull] IAttTestWindow attTestWindow, [NotNull] TimerConstants constants, int roundId, DateTime focusVisible) : base(attTestWindow, constants, roundId)
         {
             _focusStart = DateTime.Now;
+            _focusVisible = focusVisible;
             TimedTransitions = new (DateTime, Action<DateTime>)[]
             {
                 (_focusStart.AddMilliseconds(Constants.FocusPointVisibilityLength), MissedRound)
@@ -26,22 +30,34 @@ namespace AttTest.AppStates
         private void MissedRound(DateTime dateTime)
         {
             AttTestWindow.HideFocusPoint();
-            AttTestWindow.ShowFailure("Missed round");
-            
+            AttTestWindow.ShowFailure($"{(dateTime - _focusStart).Milliseconds}","Missed round");
+            AttTestWindow.SaveKeyPressTime(_focusVisible, dateTime, "miss");
+
             AttTestWindow.UpdateState(new FocusNotVisible(AttTestWindow, Constants, RoundId + 1));
         }
 
         private void FalseStart(DateTime dateTime)
         {
             AttTestWindow.HideFocusPoint();
-            AttTestWindow.ShowFailure("Too fast");
-            
+            AttTestWindow.ShowFailure($"{(dateTime - _focusStart).Milliseconds}","Too fast");
+            AttTestWindow.SaveKeyPressTime(_focusVisible, dateTime, "visible-early");
+
             AttTestWindow.UpdateState(new FocusNotVisible(AttTestWindow, Constants, RoundId + 1));
         }
 
         private void CorrectHit(DateTime dateTime)
         {
-            AttTestWindow.ShowSuccess((dateTime - _focusStart).Milliseconds.ToString());
+            var hitTime = (dateTime - _focusStart).Milliseconds;
+            if (hitTime <= Constants.FocusPointVisibilityLength)
+            {
+                AttTestWindow.ShowSuccess(hitTime.ToString(), "");
+                AttTestWindow.SaveKeyPressTime(_focusVisible, dateTime, "correct-hit");
+            }
+            else
+            {
+                AttTestWindow.ShowFailure(hitTime.ToString(), "miss");
+                AttTestWindow.SaveKeyPressTime(_focusVisible, dateTime, "miss");
+            }
             AttTestWindow.HideFocusPoint();
             AttTestWindow.UpdateState(new FocusNotVisible(AttTestWindow, Constants, RoundId + 1));
         }
