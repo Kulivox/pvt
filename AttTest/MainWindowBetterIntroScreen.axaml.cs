@@ -34,6 +34,8 @@ namespace AttTest
                 return;
             }
 
+           
+
             if (string.IsNullOrWhiteSpace(_pathToConstants))
             {
                 this.FindControl<TextBlock>("NameError").Text = "No configuration loaded";
@@ -48,7 +50,8 @@ namespace AttTest
             }
             _constants = constants;
             
-            
+            nameField.IsEnabled = false;
+            this.FindControl<Grid>("TestGrid").Focus();
             this.FindControl<Grid>("MainMenu").IsVisible = false;
             this.FindControl<Grid>("TestGrid").IsVisible = true;
 

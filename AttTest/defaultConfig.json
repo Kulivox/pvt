@@ -3,5 +3,6 @@
   "RoundLengthMaxSeconds": 5,
   "FocusPointVisibilityLength": 355,
   "TestLengthSeconds": 60,
-  "IntroLengthSeconds": 2
+  "IntroLengthSeconds": 2,
+  "FalseStartPointVisibleLength": 100
 }

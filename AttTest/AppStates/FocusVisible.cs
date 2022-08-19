@@ -18,7 +18,7 @@ namespace AttTest.AppStates
             // order of these two actions matters, we need the most distant action to be first
             KeyPressInvokedTransitions = new (DateTime, Action<DateTime>)[]
             {
-                (_focusStart.AddMilliseconds(100), CorrectHit),
+                (_focusStart.AddMilliseconds(constants.FalseStartPointVisibleLength), CorrectHit),
                 (_focusStart, FalseStart)
             };
         }
