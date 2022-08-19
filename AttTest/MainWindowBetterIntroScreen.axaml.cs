@@ -65,19 +65,22 @@ namespace AttTest
             HideTestDescription();
             HideFocusPoint();
             this.KeyDown -= StartTest;
-            _results = new List<(int, string)>();
+            _results = new List<(int, string, string)>();
+            _focusPointsAndPresses = new List<(string, string, string)>();
 
             if (_constants is null)
             {
                 throw new NullReferenceException();
             }
             
-            _endOfTest = DateTime.Now.AddSeconds(_constants.TestLengthSeconds);
+            
             _appState = new FocusNotVisible(this, _constants, 0);
             
+            this.FindControl<Grid>("TestGrid").Focus();
             this.KeyDown += KeyPress;
-            _eventLoopTimer.Tick += Tick;
-            _eventLoopTimer.Start();
+           _fname = this.FindControl<TextBox>("NameInput").Text.Trim() + "_"
+                                                                           + DateTime.Now.ToString("yyyy-MM-dd") + ".csv";
+            EventLoop();
         }
 
         
