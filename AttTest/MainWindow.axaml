@@ -1,0 +1,55 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="AttTest.MainWindow"
+        Title="AttTest">
+    
+    <Grid Margin="50">
+        <Grid Name="MainMenu" RowDefinitions="Auto,Auto,Auto,40, Auto" IsVisible="True">
+            <TextBlock Grid.Row="0">Please enter your name:</TextBlock>
+            <TextBox Name="NameInput" Grid.Row="1" Watermark="Your name here" />
+            <Grid Grid.Row="3" ColumnDefinitions="1*,3*,1*">
+                <Button
+                    Name="FilePathButton"
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Left"
+                    Click="FilePathButton_OnClick"
+                    Focusable="False">
+                    Choose your file
+                </Button>
+                <Button
+                    Name="RunButton"
+                    Grid.Column="2"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Right"
+                    Click="RunButton_OnClick"
+                    Focusable="False">
+                    Run Test
+                </Button>
+            </Grid>
+            <TextBlock Name="NameError" Foreground="Red" Grid.Row="4"></TextBlock>
+        </Grid>
+        
+        <Grid Name="TestGrid"  RowDefinitions="1*, 5*, 1*"  IsVisible="False">
+            <TextBlock Name="InfoText" Grid.Row="0">
+                INRORMATIVE MESSAGE HERE
+            </TextBlock>
+            <Grid Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center">
+                <Canvas Width="120" Height="120" VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <Ellipse Name="FocusPoint" Fill="Red" Height="120" Width="120"></Ellipse>
+                </Canvas>
+                <TextBlock Name="Debug"></TextBlock>
+            </Grid>
+            <TextBlock Name="RoundResult" Grid.Row="2" HorizontalAlignment="Center">
+            </TextBlock>
+        </Grid>
+        
+        <Grid Name="ResultScreen" IsVisible="False">
+            <TextBlock>This is results screen. This is where test statistical data will be shown later. Results have also been saved to .csv file named after the name you entered.
+            You can close the program</TextBlock>
+        </Grid>
+    </Grid>
+</Window>
